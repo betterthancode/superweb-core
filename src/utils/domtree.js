@@ -1,3 +1,5 @@
+import { directivesFor } from './directives.js'
+
 /**
  *
  * @param {Text} textNode
@@ -21,7 +23,7 @@ export const splitNode = (textNode, expression) => {
  * @param {string} expression
  * @returns {{expression: *, method: boolean, paths: Array}}
  */
-const analyzeExpression = (expression) => {
+export const analyzeExpression = (expression) => {
   const matches = expression.match(/\{\{([^\}\}]+)+\}\}/g)
   const resolution = {
     paths: [],
@@ -36,7 +38,7 @@ const analyzeExpression = (expression) => {
       resolution.method = rxM.groups.method
       resolution.paths = rxM.groups.args
         .split('this.').join('')
-        .split(',')
+        .split(',').map(x => x.trim())
       resolution.executions = [
         new Function('return ' + expression.slice(2, -2) + ';'),
         new Function('with (this) { return ' + expression.slice(2, -2) + '}')
@@ -52,12 +54,25 @@ const analyzeExpression = (expression) => {
  *
  * @param {object|HTMLElement|Slim} source
  * @param {Element} target
- * @param {Binder} binder
+ * @param {Function} binder
+ * @param {Set<Function>} directives
  */
-export const scanAttributes = (source, target, binder) => {
+export const scanAttributes = (source, target, binder, directives) => {
   const attrs = Array.from(target.attributes)
   attrs.forEach(attr => {
-    const { expression, method, paths, executions } = analyzeExpression(attr.nodeValue)
+    const directives = directivesFor(attr)
+    if (directives.length) {
+      directives.forEach(directive => {
+        directive.execution(source, target, attr, directive.match)
+        if (directive.options.hide) {
+          requestAnimationFrame(() => {
+            attr.ownerElement.removeAttribute(attr.nodeName)
+          })
+        }
+      })
+      return
+    }
+    const { method, paths, executions } = analyzeExpression(attr.nodeValue)
     if (method) {
       paths.forEach(path => {
         binder(source, attr, path, () => {
@@ -73,7 +88,6 @@ export const scanAttributes = (source, target, binder) => {
         attr.nodeValue = value
       })
     }
-    console.log(expression)
   })
 }
 
@@ -103,7 +117,8 @@ export const scanNode = (source, target, binder) => {
         })
       } else {
         const path = paths[0]
-        binder(source, replacementNode, paths[0], (source, target, newValue) => {
+        console.log(path)
+        binder(source, replacementNode, path, (source, target, newValue) => {
           replacementNode.nodeValue = newValue
         })
       }

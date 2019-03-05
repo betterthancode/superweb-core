@@ -1,136 +1,68 @@
 // @ts-check
 
-import '../node_modules/oculusx/dist/index.js'
-import { splitNode, scanNode, scanAttributes } from './utils/text.js'
+import { analyzeExpression } from './utils/domtree.js'
+import { buildComponent, shouldAutoCreate } from './utils/buildComponent.js'
+import { bind } from './utils/bind.js'
+import { directive } from './utils/directives.js'
 
-const { watch, unwatch } = window['oculusx']
-
-/**
- * @typedef {Set<Function>} Binders
- */
-
-/**
- * @typedef {Map<string, Binders>} BindMap
- */
+const dashToCamel = dash => dash.indexOf('-') < 0 ? dash : dash.replace(/-[a-z]/g,
+  m => m[1].toUpperCase())
 
 /**
- * @typedef {WeakMap<object, BindMap>} Bindings
- */
-
-/**
- * @type Bindings
- */
-const elementBindings = new WeakMap
-
-const getBindingsFor = target => {
-  let bindMap = elementBindings.get(target)
-  if (!bindMap) {
-    bindMap = new Map
-    elementBindings.set(target, bindMap)
-  }
-  return bindMap
-}
-
-const getBindingsByExpression = (target, expression) => {
-  const bindMap = getBindingsFor(target)
-  let set = bindMap.get(expression)
-  if (!set) {
-    set = new Set
-    bindMap.set(expression, set)
-  }
-  return set
-}
-
-/**
- * @param {object|HTMLElement} source
- * @param {object|HTMLElement|Slim} target
- * @param {string} expression
- * @param {Function} execution
- * @interface Binder
- */
-const bind = (source, target, expression, execution) => {
-  const invocator = (/** @type {*} */ value, /** @type string */ key) => {
-    execution(source, target, value, expression.split('.')[0], key)
-  }
-  watch(source, expression, invocator, true)
-  invocator.unbind = () => unwatch(source, expression, invocator)
-  getBindingsByExpression(source, expression.split('.')[0]).add(invocator)
-  return invocator.unbind
-}
-
-/**
- * @param {Slim} target
- */
-const shouldAutoCreate = target => {
-  // TODO: Implement this
-  return true
-}
-
-/**
- * @param {Slim} target
- */
-const buildComponent = target => {
-  // TODO: Build component
-  const children = Array.from(target.childNodes)
-  const childElements = Array.from(target.children)
-  children.forEach(child => scanNode(target, child, bind))
-  childElements.forEach(child => scanAttributes(target, child, bind))
-}
-
-/**
- * @param {Slim} target
- */
-const runBindings = target => {
-  const bindings = getBindingsFor(target)
-  bindings.forEach(binders => {
-    binders.forEach(binder => binder())
-  })
-}
-
-const runBindingsByExpression = (target, expression) => {
-  getBindingsByExpression(target, expression).forEach(binder => binder())
-}
-
-const clearBindings = target => {
-  getBindingsFor(target).clear()
-}
-
-/**
- * @param {typeof HTMLElement} Base
+ *
+ * @param {typeof Object} Base
+ * @constructor
  */
 const Component = Base => class extends Base {
   constructor () {
     super()
-    // setup bind mapping
-    elementBindings.set(this, new Map)
+    if (!this.hasOwnProperty('useShadow')) {
+      this.useShadow = true
+    }
     this.beforeCreated()
     if (shouldAutoCreate(this)) {
+      buildComponent(this)
       requestAnimationFrame(() => {
-        buildComponent(this)
         this.created()
       })
     }
   }
+
+  static get template () { return null }
 
   /** @abstract */
   beforeCreated () {}
 
   /** @abstract */
   created () {}
-
-  /**
-   * @protected
-   * @param {string} [expression]
-   */
-  update (expression) {
-    if (expression) {
-      runBindingsByExpression(this, expression)
-    } else {
-      runBindings(this)
-    }
-  }
 }
 
 export const Slim = Component(HTMLElement)
 
-Slim.bind = bind
+directive(
+  (attr) => {
+    return attr.nodeName.startsWith(':') ? analyzeExpression(attr.nodeValue) : undefined
+  },
+  (source, target, attr, expressionInfo) => {
+    const targetProp = dashToCamel(attr.nodeName.slice(1))
+    const { paths, executions } = expressionInfo
+    paths.forEach(path => {
+      if (executions) {
+        bind(source, target, path, (s, t, value) => {
+          try {
+            target[targetProp] = executions[0].call(source)
+          } catch {
+            target[targetProp] = executions[1].call(source)
+          }
+        })
+      } else {
+        bind(source, target, path, (s, t, value) => {
+          target[targetProp] = value
+        })
+      }
+    })
+  },
+  {
+    hide: true
+  }
+)

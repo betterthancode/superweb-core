@@ -18,10 +18,22 @@
         this.userName = 'Jon Snow';
         this.kaka = '<h1>Hello</h1>';
         window.unit = this;
+        this.model = {
+          name: 'Avichay',
+          age: 40
+        }
+        this.magic = '<h3 style="color:red">Fuck</h3>'
+      }
+
+      static get template() {
+        return `
+            <b attr="{{userName}}" aa-ggg="{{rev(userName)}}">Hello, {{method(yy, xx)}} |||| Hello, {{userName}}</b>
+            <p>Name: {{model.name}}, Age: {{model.age}}</p>
+            <p :inner-h-t-m-l="{{magic}}">Hello, <b>{{model.age}}</b></p>
+        `;
       }
 
       method(x, y) {
-        console.log(x, y);
         return x + y;
       }
 
@@ -31,8 +43,10 @@
     });
     
   </script>
-  <a-a>
-      <b attr="{{userName}}" aa-ggg="{{rev(userName)}}">Hello, {{method(xx, yy)}} |||| Hello, {{userName}}</b>
-    </a-a>
+  <a-a></a-a>
+  <a-a></a-a>
+  <!--<a-a>-->
+      <!--<b attr="{{userName}}" aa-ggg="{{rev(userName)}}">Hello, {{method(xx, yy)}} |||| Hello, {{userName}}</b>-->
+    <!--</a-a>-->
 </body>
 </html>
