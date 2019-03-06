@@ -1,52 +1,55 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <title>SPLIT NODES</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>SPLIT NODES</title>
 </head>
 <body>
-  <script type="module">
-    import {Slim} from '../src/component.js';
+<script type="module">
+  import { Slim } from '../dist/component.js'
+  import '../dist/directive-if.js'
 
-    customElements.define('a-a', class extends Slim {
-      constructor () {
-        super();
-        this.xx = '12222';
-        this.yy = 2;
-        this.userName = 'Jon Snow';
-        this.kaka = '<h1>Hello</h1>';
-        window.unit = this;
-        this.model = {
-          name: 'Avichay',
-          age: 40
-        }
-        this.magic = '<h3 style="color:red">Fuck</h3>'
+  customElements.define('a-a', class extends Slim {
+    constructor () {
+      super()
+      this.xx = '12222'
+      this.yy = 2
+      this.userName = 'Jon Snow'
+      this.kaka = '<h1>Hello</h1>'
+      window.unit = this
+      this.model = {
+        name: 'Avichay',
+        age: 40
       }
+      this.magic = '<h3 style="color:red">Fuck</h3>'
+    }
 
-      static get template() {
-        return `
+    static get template () {
+      return `
             <b attr="{{userName}}" aa-ggg="{{rev(userName)}}">Hello, {{method(yy, xx)}} |||| Hello, {{userName}}</b>
             <p>Name: {{model.name}}, Age: {{model.age}}</p>
             <p :inner-h-t-m-l="{{magic}}">Hello, <b>{{model.age}}</b></p>
-        `;
-      }
+            <h5 s:if="{{myBoolean}}">Conditional</h5>
+            <h5 s:if="{{invert(myBoolean)}}">Alternate</h5>
+        `
+    }
 
-      method(x, y) {
-        return x + y;
-      }
+    invert (bool) {
+      return !bool
+    }
 
-      rev(str) {
-        return str.split('').reverse().join('')
-      }
-    });
-    
-  </script>
-  <a-a></a-a>
-  <a-a></a-a>
-  <!--<a-a>-->
-      <!--<b attr="{{userName}}" aa-ggg="{{rev(userName)}}">Hello, {{method(xx, yy)}} |||| Hello, {{userName}}</b>-->
-    <!--</a-a>-->
+    method (x, y) {
+      return x + y
+    }
+
+    rev (str) {
+      return str.split('').reverse().join('')
+    }
+  })
+
+</script>
+<a-a></a-a>
 </body>
 </html>

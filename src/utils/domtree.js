@@ -63,11 +63,13 @@ export const scanAttributes = (source, target, binder, directives) => {
     const directives = directivesFor(attr)
     if (directives.length) {
       directives.forEach(directive => {
-        directive.execution(source, target, attr, directive.match)
-        if (directive.options.hide) {
-          requestAnimationFrame(() => {
-            attr.ownerElement.removeAttribute(attr.nodeName)
-          })
+        if (directive.match) {
+          directive.execution(source, target, attr, directive.match)
+          if (directive.options.hide) {
+            requestAnimationFrame(() => {
+              attr.ownerElement.removeAttribute(attr.nodeName)
+            })
+          }
         }
       })
       return
@@ -95,7 +97,7 @@ export const scanAttributes = (source, target, binder, directives) => {
  *
  * @param {object|HTMLElement} source
  * @param {HTMLElement} target
- * @param {Binder} binder
+ * @param {Function} binder
  */
 export const scanNode = (source, target, binder) => {
 
@@ -117,7 +119,6 @@ export const scanNode = (source, target, binder) => {
         })
       } else {
         const path = paths[0]
-        console.log(path)
         binder(source, replacementNode, path, (source, target, newValue) => {
           replacementNode.nodeValue = newValue
         })

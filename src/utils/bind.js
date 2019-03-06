@@ -1,5 +1,4 @@
-import '../../node_modules/oculusx/dist/index.js'
-const { watch, unwatch } = window['oculusx']
+import {watch, unwatch} from 'oculusx'
 
 export const bind = (source, target, expression, execution) => {
   const invocation = (/** @type {*} */ value, /** @type string */ key) => {

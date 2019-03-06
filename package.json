@@ -2,7 +2,9 @@
   "name": "@superweb/core",
   "version": "0.1.0",
   "description": "Reactive custom elements / components",
-  "main": "index.js",
+  "main": "src/component.js",
+  "source": "src/component.js",
+  "module": "src/component.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
@@ -12,6 +14,21 @@
     "oculusx": "^0.4.1"
   },
   "devDependencies": {
+    "@pika/plugin-build-web": "^0.3.14",
+    "@pika/plugin-bundle-web": "^0.3.14",
+    "rollup-plugin-commonjs": "^9.2.1",
+    "rollup-plugin-node-resolve": "^4.0.1",
+    "rollup-plugin-terser": "^4.0.4",
     "showroom": "^0.9.3"
+  },
+  "@pika/pack": {
+    "pipeline": [
+      [
+        "@pika/plugin-build-web",
+        {
+          "name": "superweb-core"
+        }
+      ]
+    ]
   }
 }
